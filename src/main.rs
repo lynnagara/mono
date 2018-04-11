@@ -1,7 +1,12 @@
 mod image;
 
+// use image::Image;
+
+
 fn main() {
     let img_path = "./images/cat.jpg";
     let out_path = "./images/out.png";
-    image::pixelate_rgba(img_path, out_path, 10);
+
+    image::Image::load(img_path).pixelate(10).resize(500, 500).save(out_path);
+
 }

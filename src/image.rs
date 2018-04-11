@@ -6,15 +6,39 @@ use std::cmp::min;
 
 use image::image::{FilterType, GenericImage, DynamicImage, Pixel};
 
-#[allow(dead_code)]
-pub fn resize(path: &str, out_path: &str, height: u32, width: u32) {
-    let img = get_image(&path);
-    let resized = img.resize(height, width, FilterType::Gaussian);
-    save_file(resized, &out_path);
+pub struct Image {
+    path: String,
+    img: DynamicImage
 }
 
-pub fn pixelate_rgba(path: &str, out_path: &str, pixel_size: u32) {
-    let mut img = get_image(&path);
+
+impl Image {
+    pub fn load(path: &str) -> Image {
+        Image{path: path.to_string(), img: get_image(&path)}
+    }
+
+    pub fn save(self, out_path: &str) -> Self {
+        save_file(&self.img, &out_path);
+        self
+    }
+
+    pub fn resize(self, height: u32, width: u32) -> Self {
+        let img = resize(self.img, height, width);
+        Image {path: self.path, img}
+    }
+
+    pub fn pixelate(self, pixel_size: u32) -> Self {
+        let img = pixelate_rgba(self.img, pixel_size);
+        Image {path: self.path, img}
+    }
+}
+
+
+fn resize(img: DynamicImage, height: u32, width: u32) -> DynamicImage {
+    img.resize(height, width, FilterType::Gaussian)
+}
+
+fn pixelate_rgba(mut img: DynamicImage, pixel_size: u32) -> DynamicImage {
     let (width, height) = img.dimensions();
 
     let x_steps = width / pixel_size;
@@ -45,7 +69,7 @@ pub fn pixelate_rgba(path: &str, out_path: &str, pixel_size: u32) {
             }
         }
     }
-    save_file(img, &out_path);
+    img
 }
 
 fn add_vectors(a: Vec<u32>, b: Vec<u32>) -> Vec<u32> {
@@ -63,9 +87,9 @@ fn get_image(path: &str) -> DynamicImage {
 }
 
 
-fn save_file(image: DynamicImage, path: &str) {
+fn save_file(image: &DynamicImage, path: &str) {
     let mut out = File::create(&Path::new(&path)).unwrap();
-    image.save(&mut out, image::PNG).expect("Could not be saved");
+    &image.save(&mut out, image::PNG).expect("Could not be saved");
     println!("Image saved!");
 }
 
